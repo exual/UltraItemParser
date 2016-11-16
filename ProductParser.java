@@ -25,7 +25,18 @@ public class ProductParser {
     static final String XML_PROD_NAME = "Product";
     static final String XML_PROD_ID = "identifier";
 
+    private Controller controller;
 
+    public ProductParser(Controller controller) {
+        this.controller = controller;
+    }
+
+    /**
+     * This method gabs product files from a directory and parses them
+     * and stores them in an array list and if it fails it returns an error.
+     * @param directory The directory to be parsed
+     * @return ArrayList of Product objects or null if an error
+     */
     public ArrayList<Product> parseDirectory(String directory) {
         File dir = new File(directory);
         ArrayList<Product> products = new ArrayList<>();
@@ -38,11 +49,16 @@ public class ProductParser {
             }
         }
         else {
-            Common.logError("Invalid parse directory: " + directory);
+            controller.outputError("Invalid parse directory: " + directory);
         }
         return products;
     }
-
+    /**
+     * This method decides whether  the content is either a .xml file or a .json file
+     * and logs an error if the file is neither.
+     * @param file File to be parsed.
+     * @return Product object, null if file does not end with .xml or .json
+     */
     public Product parseFile(File file) {
         if(file.getPath().endsWith(".xml")) {
             return parseXMLProduct(file);
@@ -51,12 +67,17 @@ public class ProductParser {
             return parseJsonProduct(file);
         }
         else {
-            Common.logError("File not parsed: " + file.getPath());
+            controller.outputError("File not parsed: " + file.getPath());
             return null;
         }
     }
 
     // TODO: the last catches for both of the parsers need to catch the real error: parsing a file with unexpected data
+    /**
+     * This method parses a json file.
+     * @param file The json file to parse.
+     * @return Product object, null if an error
+     */
     private Product parseJsonProduct(File file) {
         Product newProd = null;
 
@@ -70,15 +91,20 @@ public class ProductParser {
             newProd = new Product(id, name);
 
         } catch (JsonException ex) {
-            Common.logError(ex.getMessage());
+            controller.outputError(ex.getMessage());
         } catch (FileNotFoundException ex) {
-            Common.logError("File not found: " + file + "(" + ex.getMessage() + ")");
+            controller.outputError("File not found: " + file + "(" + ex.getMessage() + ")");
         } catch (Exception ex) {
-            Common.logError("parseJsonProduct general exception with file " + file.getPath() + ":" + ex.getMessage());
+            controller.outputError("parseJsonProduct general exception with file " + file.getPath() + ":" + ex.getMessage());
         }
         return newProd;
     }
 
+    /**
+     * This method parses an xml file
+     * @param file The file to be parsed
+     * @return Product object or null if an error occurs
+     */
     private Product parseXMLProduct(File file) {
         Product newProd = null;
 
@@ -92,20 +118,26 @@ public class ProductParser {
             String name = el.getTextContent();
             newProd = new Product(id, name);
         } catch (FileNotFoundException ex) {
-            Common.logError("File not found: " + file + "(" + ex.getMessage() + ")");
+            controller.outputError("File not found: " + file + "(" + ex.getMessage() + ")");
         } catch (ParserConfigurationException ex) {
-            Common.logError("ParserConfigurationException: " + ex.getMessage());
+            controller.outputError("ParserConfigurationException: " + ex.getMessage());
         } catch (SAXException ex) {
-            Common.logError("SAXException: " + ex.getMessage());
+            controller.outputError("SAXException: " + ex.getMessage());
         } catch (IOException ex) {
-            Common.logError("IOException: " + ex.getMessage());
+            controller.outputError("IOException: " + ex.getMessage());
         } catch (Exception ex) {
-            Common.logError("parseXMLProduct general exception with file " + file.getPath() + ":" + ex.getMessage());
+            controller.outputError("parseXMLProduct general exception with file " + file.getPath() + ":" + ex.getMessage());
         }
 
         return newProd;
     }
 
+    /**
+     * This method saves a list of products to a file.
+     * @param products ArrayList of Product objects
+     * @param file File to be saved
+     * @return boolean success of the file save
+     */
     public boolean writeProductsToFile(ArrayList<Product> products, File file) {
         try {
             JsonArrayBuilder prodBuilder = Json.createArrayBuilder();
@@ -122,7 +154,7 @@ public class ProductParser {
             return true;
 
         } catch (FileNotFoundException ex) {
-            Common.logError("File not found: " + file.getPath());
+            controller.outputError("File not found: " + file.getPath());
         }
         return false;
     }

@@ -1,5 +1,6 @@
 /**
  * Created by joel on 10/6/16.
+ *
  */
 public class Product {
     private String name, id;
