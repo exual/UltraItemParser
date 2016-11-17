@@ -5,16 +5,8 @@ import java.util.ArrayList;
 
 /**
  * Created by joel on 10/5/16.
- *
- *
- * I don't like that I've put all the file IO in this class - the next
- * iteration might break this class down to only deal in streams, and
- * have another class handle the file-based stuff - Joel
- *
- * TODO: move the file IO from here into its own class
  */
 public class ProductParser {
-
     private Controller controller;
 
     public ProductParser(Controller controller) {
@@ -22,8 +14,8 @@ public class ProductParser {
     }
 
     /**
-     * This method gabs product files from a directory and parses them
-     * and stores them in an array list and if it fails it returns an error.
+     * This method grabs product files from a directory and parses them
+     * and stores them in an array list and if it fails it returns a null.
      * @param directory The directory to be parsed
      * @return ArrayList of Product objects or null if an error
      */

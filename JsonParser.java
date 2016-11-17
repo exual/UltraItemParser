@@ -6,6 +6,11 @@ import java.util.ArrayList;
  * Created by joel on 11/17/16.
  */
 public class JsonParser implements IParser {
+    static final String INCOMING_PARENT_NAME = "product_record";
+    static final String OUTGOING_PARENT_NAME = "product_records";
+    static final String PROD_NAME = "product_name";
+    static final String ID_NAME = "product_id";
+
     Controller controller;
 
     public JsonParser(Controller controller) {
@@ -23,11 +28,11 @@ public class JsonParser implements IParser {
 
         try {
             JsonReader reader = Json.createReader(new FileReader(file));
-            JsonObject prodJson = reader.readObject().getJsonObject(controller.JSON_INCOMING_PARENT_NAME);
+            JsonObject prodJson = reader.readObject().getJsonObject(INCOMING_PARENT_NAME);
             reader.close();
 
-            String id = prodJson.getString(controller.JSON_ID_NAME);
-            String name = prodJson.getString(controller.JSON_PROD_NAME);
+            String id = prodJson.getString(ID_NAME);
+            String name = prodJson.getString(PROD_NAME);
             newProd = new Product(id, name);
 
         } catch (JsonException ex) {
@@ -52,10 +57,10 @@ public class JsonParser implements IParser {
             JsonArrayBuilder prodBuilder = Json.createArrayBuilder();
             for(Product product:products) {
                 prodBuilder.add(Json.createObjectBuilder()
-                        .add(controller.JSON_PROD_NAME, product.getName())
-                        .add(controller.JSON_ID_NAME, product.getId()).build());
+                        .add(PROD_NAME, product.getName())
+                        .add(ID_NAME, product.getId()).build());
             }
-            JsonObject productsObject = Json.createObjectBuilder().add(controller.JSON_OUTGOING_PARENT_NAME, prodBuilder).build();
+            JsonObject productsObject = Json.createObjectBuilder().add(OUTGOING_PARENT_NAME, prodBuilder).build();
 
             JsonWriter writer = Json.createWriter(new FileOutputStream(file));
             writer.writeObject(productsObject);

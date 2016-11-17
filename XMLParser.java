@@ -13,6 +13,9 @@ import java.util.ArrayList;
  * Created by joel on 11/17/16.
  */
 public class XMLParser implements IParser {
+    static final String PROD_NAME = "Product";
+    static final String PROD_ID = "identifier";
+
     Controller controller;
 
     public XMLParser(Controller controller) {
@@ -32,9 +35,9 @@ public class XMLParser implements IParser {
             Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
 
             // we expect only a single product per file, so we only care about the first item, thus the .item(0)
-            Element el = (Element) document.getElementsByTagName(controller.XML_PROD_NAME).item(0);
+            Element el = (Element) document.getElementsByTagName(PROD_NAME).item(0);
 
-            String id = el.getAttribute(controller.XML_PROD_ID);
+            String id = el.getAttribute(PROD_ID);
             String name = el.getTextContent();
             newProd = new Product(id, name);
         } catch (FileNotFoundException ex) {
@@ -52,6 +55,12 @@ public class XMLParser implements IParser {
         return newProd;
     }
 
+    /**
+     * This method is an inactive stub, for future use.
+     * @param incoming ArrayList of products
+     * @param outgoing File to write
+     * @return True if parsing and file writing succeeds.
+     */
     @Override
     public boolean parseToFile(ArrayList<Product> incoming, File outgoing) {
         return false;
