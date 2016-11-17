@@ -7,6 +7,16 @@ public class Controller {
 	private ArrayList<Product> products;
 	private GUI frame = null;
 
+	// this is not the right place for these!
+	// I just don't know where is the right place yet. Joel.
+	static final String JSON_INCOMING_PARENT_NAME = "product_record";
+	static final String JSON_OUTGOING_PARENT_NAME = "product_records";
+	static final String JSON_PROD_NAME = "product_name";
+	static final String JSON_ID_NAME = "product_id";
+	static final String XML_PROD_NAME = "Product";
+	static final String XML_PROD_ID = "identifier";
+
+
 	public Controller(String path) {
 		parseDirectory(path);
 	}
@@ -17,7 +27,6 @@ public class Controller {
 	}
 
 	public void parseDirectory(String path) {
-		System.out.println("Inside parseDirectory");
 		ProductParser pp = new ProductParser(this);
 		File file;
 		Boolean success;

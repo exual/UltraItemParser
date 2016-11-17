@@ -1,10 +1,4 @@
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-import javax.json.*;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.ArrayList;
 
@@ -20,10 +14,6 @@ import java.util.ArrayList;
  * TODO: move the file IO from here into its own class
  */
 public class ProductParser {
-    static final String JSON_PROD_NAME = "product_name";
-    static final String JSON_ID_NAME = "product_id";
-    static final String XML_PROD_NAME = "Product";
-    static final String XML_PROD_ID = "identifier";
 
     private Controller controller;
 
@@ -54,82 +44,17 @@ public class ProductParser {
         return products;
     }
     /**
-     * This method decides whether  the content is either a .xml file or a .json file
-     * and logs an error if the file is neither.
+     * This method attempts to parse a single product from a file.
      * @param file File to be parsed.
      * @return Product object, null if file does not end with .xml or .json
      */
     public Product parseFile(File file) {
-        if(file.getPath().endsWith(".xml")) {
-            return parseXMLProduct(file);
-        }
-        else if(file.getPath().endsWith(".json")) {
-            return parseJsonProduct(file);
-        }
-        else {
+        IParser parser = getParser(file.getPath());
+        if( parser == null ) {
             controller.outputError("File not parsed: " + file.getPath());
             return null;
         }
-    }
-
-    // TODO: the last catches for both of the parsers need to catch the real error: parsing a file with unexpected data
-    /**
-     * This method parses a json file.
-     * @param file The json file to parse.
-     * @return Product object, null if an error
-     */
-    private Product parseJsonProduct(File file) {
-        Product newProd = null;
-
-        try {
-            JsonReader reader = Json.createReader(new FileReader(file));
-            JsonObject prodJson = reader.readObject().getJsonObject("product_record");
-            reader.close();
-
-            String id = prodJson.getString(JSON_ID_NAME);
-            String name = prodJson.getString(JSON_PROD_NAME);
-            newProd = new Product(id, name);
-
-        } catch (JsonException ex) {
-            controller.outputError(ex.getMessage());
-        } catch (FileNotFoundException ex) {
-            controller.outputError("File not found: " + file + "(" + ex.getMessage() + ")");
-        } catch (Exception ex) {
-            controller.outputError("parseJsonProduct general exception with file " + file.getPath() + ":" + ex.getMessage());
-        }
-        return newProd;
-    }
-
-    /**
-     * This method parses an xml file
-     * @param file The file to be parsed
-     * @return Product object or null if an error occurs
-     */
-    private Product parseXMLProduct(File file) {
-        Product newProd = null;
-
-        try {
-            Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
-
-            // we expect only a single product per file, so we only care about the first item, thus the .item(0)
-            Element el = (Element) document.getElementsByTagName(XML_PROD_NAME).item(0);
-
-            String id = el.getAttribute(XML_PROD_ID);
-            String name = el.getTextContent();
-            newProd = new Product(id, name);
-        } catch (FileNotFoundException ex) {
-            controller.outputError("File not found: " + file + "(" + ex.getMessage() + ")");
-        } catch (ParserConfigurationException ex) {
-            controller.outputError("ParserConfigurationException: " + ex.getMessage());
-        } catch (SAXException ex) {
-            controller.outputError("SAXException: " + ex.getMessage());
-        } catch (IOException ex) {
-            controller.outputError("IOException: " + ex.getMessage());
-        } catch (Exception ex) {
-            controller.outputError("parseXMLProduct general exception with file " + file.getPath() + ":" + ex.getMessage());
-        }
-
-        return newProd;
+        return parser.parseFromFile(file);
     }
 
     /**
@@ -139,23 +64,27 @@ public class ProductParser {
      * @return boolean success of the file save
      */
     public boolean writeProductsToFile(ArrayList<Product> products, File file) {
-        try {
-            JsonArrayBuilder prodBuilder = Json.createArrayBuilder();
-            for(Product product:products) {
-                prodBuilder.add(Json.createObjectBuilder()
-                    .add(JSON_PROD_NAME, product.getName())
-                    .add(JSON_ID_NAME, product.getId()).build());
-            }
-            JsonObject productsObject = Json.createObjectBuilder().add("product_records", prodBuilder).build();
-
-            JsonWriter writer = Json.createWriter(new FileOutputStream(file));
-            writer.writeObject(productsObject);
-            writer.close();
-            return true;
-
-        } catch (FileNotFoundException ex) {
-            controller.outputError("File not found: " + file.getPath());
+        IParser parser = getParser(file.getPath());
+        if( parser == null ) {
+            controller.outputError("No parser available for " + file.toString());
+            return false;
         }
-        return false;
+        return parser.parseToFile(products, file);
+    }
+
+    /**
+     * This method guesses at the type of data to be parsed, based on
+     * the passed string, which will usually be a file path.
+     * @param type String with the type of data to be parsed.
+     * @return IParser parser object.
+     */
+    public IParser getParser(String type) {
+        if( type.endsWith("XML") || type.endsWith("xml") ) {
+            return new XMLParser(controller);
+        } else if( type.endsWith("JSON") || type.endsWith("json") ) {
+            return new JsonParser(controller);
+        } else {
+            return null;
+        }
     }
 }
